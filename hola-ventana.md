@@ -57,3 +57,118 @@ int main() {
 ## Detalles útiles:
 - glfwTerminate(): Aunque el programa esté fallando y salgas con return -1, es una buena práctica asegurarte de liberar cualquier recurso residual si ya se había inicializado parcialmente algo complejo (aunque si glfwInit falla por completo, por lo general no es estrictamente necesario, pero sí lo es al cerrar el programa con éxito).
 - glfwGetError(const char** description): Si necesitas saber exactamente por qué falló glfwInit(), puedes usar esta función antes de que el programa termine para capturar el mensaje de error de GLFW.
+
+Para usar glfwGetError, le pasas la dirección de un puntero a const char*. La función se encarga de rellenar ese puntero con un mensaje de texto legible que describe el último error ocurrido en el hilo actual.
+
+Aquí tienes un ejemplo práctico de cómo implementarlo cuando falla glfwInit():
+
+```cpp
+#include <iostream>
+#include <GLFW/glfw3.h>
+
+int main() {
+    // Declaramos un puntero para almacenar la descripción del error
+    const char* description = nullptr;
+
+    // Intentamos inicializar GLFW
+    if (!glfwInit()) {
+        // Obtenemos el código de error y el mensaje descriptivo
+        int errorCode = glfwGetError(&description);
+        
+        std::cerr << "Fallo al inicializar GLFW." << std::endl;
+        std::cerr << "Codigo de error: " << errorCode << std::endl;
+        
+        if (description) {
+            std::cerr << "Descripcion: " << description << std::endl;
+        }
+        
+        return -1;
+    }
+
+    // Código restante...
+
+    glfwTerminate();
+    return 0;
+}
+```
+
+## Puntos clave a tener en cuenta:
+- **No liberes la memoria:** La cadena devuelta en description es administrada internamente por GLFW. No debes usar delete ni free en ella.
+- **Tiempo de vida breve:** El texto solo es válido hasta que ocurra el siguiente error de GLFW o hasta que se llame a glfwTerminate(). Por eso es mejor imprimirlo o guardarlo inmediatamente.
+
+
+En la función principal, primero inicializamos GLFW con glfwInit, tras lo cual podemos configurarlo usando glfwWindowHint. El primer argumento de glfwWindowHint nos indica qué opción queremos configurar, pudiendo seleccionarla de una larga enumeración de opciones posibles con el prefijo GLFW_. El segundo argumento es un número entero que establece el valor de nuestra opción. Puede encontrar una lista de todas las opciones posibles y sus valores correspondientes en la documentación de ventanas de GLFW¹. Si intenta ejecutar la aplicación ahora y aparecen muchos errores de referencia indefinida, significa que no ha enlazado correctamente la biblioteca GLFW.
+
+Dado que este libro se centra en OpenGL versión 3.3, indicaremos a GLFW que esta es la versión que queremos usar. De esta forma, GLFW podrá realizar los ajustes necesarios al crear el contexto de OpenGL. Esto garantiza que, si un usuario no tiene la versión de OpenGL adecuada, GLFW no se ejecutará. Establecemos la versión principal y secundaria en 3. También indicamos a GLFW que queremos usar explícitamente el perfil core. Al indicarle a GLFW que queremos usar el perfil core, tendremos acceso a un subconjunto más reducido de funciones de OpenGL, sin las funciones retrocompatibles que ya no necesitamos. Tenga en cuenta que en Mac OS X debe agregar glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE) a su código de inicialización para que funcione.
+
+> Asegúrate de tener instalada la versión 3.3 o superior de OpenGL en tu sistema/hardware; de ​​lo contrario, la aplicación fallará o mostrará un comportamiento errático. Para averiguar la versión de OpenGL en tu equipo, ejecuta `glxinfo` en Linux o utiliza una utilidad como OpenGL Extension Viewer para Windows. Si la versión compatible es inferior, comprueba si tu tarjeta gráfica es compatible con OpenGL 3.3 o superior (de lo contrario, es muy antigua) y/o actualiza tus controladores.
+
+Para empezar con LearnOpenGL, necesitas verificar y preparar tres cosas principales en tu sistema:
+
+1. Un compilador de C++ (como g++ o clang).
+2. Make / CMake (para compilar los proyectos).
+3. Las librerías de desarrollo que pide OpenGL (GLFW, GLAD, y librerías de soporte gráfico para Linux como X11/Wayland y OpenGL headers).
+
+Vamos a revisar paso a paso cómo comprobar qué tienes instalado ejecutando comandos en tu terminal.
+
+## Paso 1: Verificar el Compilador de C++ (g++) y CMake
+Abre tu terminal (Ctrl + Alt + T) y escribe los siguientes comandos para ver si ya los tienes instalados y qué versión tienes:
+
+```bash
+g++ --version
+cmake --version
+```
+- **Qué debes ver:** Si te devuelve un número de versión (por ejemplo, g++ (Ubuntu ...) 11.x o similar), ¡vas por buen camino!
+- **Si no lo tienes:** No te preocupes, si te sale un error de que no se encuentra el comando, puedes instalar ambos ejecutando:
+
+```bash
+sudo apt update
+sudo apt install build-essential cmake
+```
+
+## Paso 2: Verificar las herramientas gráficas y librerías del sistema en Linux
+En Ubuntu, OpenGL viene soportado por los drivers de tu tarjeta gráfica (NVIDIA, AMD o Intel), pero para compilar proyectos gráficos necesitamos asegurarnos de tener los paquetes de desarrollo de OpenGL y X11/Wayland.
+
+Ejecuta este comando para ver si tienes las librerías de desarrollo de OpenGL instaladas:
+
+```bash
+dpkg -l | grep -E "libgl1-mesa-dev|libglu1-mesa-dev"
+```
+
+- **Qué debes ver:** Si la terminal te devuelve líneas que dicen ii  libgl1-mesa-dev, significa que ya están instaladas.
+- **Si no tienes nada o sale vacío**, instálalas con este comando (son esenciales para que tu código pueda comunicarse con la tarjeta gráfica en Linux):
+
+```bash
+sudo apt install libgl1-mesa-dev libglu1-mesa-dev
+```
+
+## Paso 3: ¿Qué pasa con GLFW y GLAD? (Las librerías del libro)
+LearnOpenGL utiliza dos librerías específicas que raras veces vienen preinstaladas en Ubuntu, ya que se descargan o configuran para cada proyecto:
+
+1. GLFW: Una librería para crear la ventana, el contexto de OpenGL y capturar el teclado/mouse.
+2. GLAD: Un cargador de funciones de OpenGL (necesario porque las funciones de OpenGL cambian según la tarjeta gráfica y GLAD se encarga de cargarlas en tiempo de ejecución).
+
+Puedes instalar GLFW directamente desde el gestor de paquetes de Ubuntu para que esté disponible globalmente:
+
+```bash
+sudo apt install libglfw3-dev libglfw3
+```
+
+> (Nota: GLAD no se instala con apt porque se genera a medida desde una web oficial según la versión de OpenGL que quieras usar, pero el libro te enseña paso a paso cómo integrarlo en tu primer proyecto).
+
+## Verificar GLFW
+Antes de pasar al código, nos falta verificar si tienes instalada la librería GLFW (la que se encarga de crear la ventana y escuchar el teclado y el ratón).
+
+Ejecuta este comando en tu terminal para comprobarlo:
+
+```bash
+dpkg -l | grep libglfw3-dev
+```
+
+**Si te aparece con ii al inicio:** ¡Ya la tienes instalada!
+**Si no sale nada o está vacío:** Instálala rápidamente ejecutando:
+
+```bash
+sudo apt install libglfw3-dev
+```
+
