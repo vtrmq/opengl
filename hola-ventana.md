@@ -209,3 +209,95 @@ learnopengl/
         ├── CMakeLists.txt      <-- (Un archivo chiquito que solo compila tu main.cpp)
         └── main.cpp            <-- (Tu código del capítulo)
 ```
+
+## ¿Cómo puedes verificar qué OpenGL soporta tu Ubuntu actualmente?
+Si alguna vez tienes curiosidad por saber qué versión máxima de OpenGL soporta directamente tu tarjeta gráfica en Ubuntu, puedes ejecutar este comando en la terminal (si tienes las herramientas de Mesa utils instaladas):
+
+```bash
+glxinfo | grep "OpenGL version"
+```
+
+## 1. La regla de oro de OpenGL: Retrocompatibilidad (Backward Compatibility)
+OpenGL es una especificación extremadamente respetuosa con el pasado. Una versión más nueva de OpenGL incluye y soporta todo lo que tenían las versiones anteriores.
+
+- Tu tarjeta gráfica y tus drivers en Ubuntu soportan nativamente hasta OpenGL 4.2.
+- El libro LearnOpenGL te pide un contexto de OpenGL 3.3.
+- Como 4.2 es mayor que 3.3, tu computadora puede ejecutar código de 3.3 con los ojos cerrados. Es como si te pidieran leer un libro de secundaria y tú ya estuvieras en la universidad; lo entenderás y harás sin problema.
+
+
+## 2. ¿Cómo le dices a tu programa qué versión usar?
+Cuando escribas el código del Capítulo 3 (Hello Window), tú le indicarás explícitamente a GLFW mediante código de C++ qué versión exacta quieres inicializar:
+
+```cpp
+glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+```
+
+Cuando ejecutes tu programa en Ubuntu, GLFW le dirá al driver de tu tarjeta gráfica ("Oye, entrégame un contexto de OpenGL 3.3 Core Profile"). Tu driver (que soporta hasta 4.2) responderá: "Perfecto, te daré lo que pides", y todo funcionará de manera nativa.
+
+## 3. ¿Debes configurar GLAD para 3.3 o para 4.2?
+Lo más recomendable es que sigas usando OpenGL 3.3 Core Profile (tal como pide el libro y como lo configuramos en el CMakeLists.txt), por dos razones:
+
+1. Enfoque de aprendizaje: LearnOpenGL te enseña paso a paso usando exclusivamente las herramientas de la versión 3.3. Si configuras GLAD para 4.2, tendrías funciones adicionales que el libro nunca menciona ni utiliza.
+2. Portabilidad: Al mantener tu código en OpenGL 3.3 Core Profile, te aseguras de que si algún día copias tu código y lo ejecutas en otra PC (una laptop vieja, una Mac, o una PC con Windows), funcionará exactamente igual porque la versión 3.3 es el estándar universal más compatible del mundo moderno para aprender gráficos.
+
+## ¿De dónde sacamos los 3 archivos necesarios?
+Puedes generarlos rápidamente en glad.dav1d.dev con estos parámetros:
+
+- Language: C/C++
+- Specification: OpenGL
+- API: gl=3.3 (o la que prefieras)
+- Profile: Core
+- Generator: C/C++
+
+Al darle a Generate, te descargará un .zip. De ese zip solo necesitas extraer 3 archivos y colocarlos en tu estructura local:
+
+- include/glad/glad.h -> ponlo en third_party/glad/include/glad/
+- include/KHR/khrplatform.h -> ponlo en third_party/glad/include/KHR/
+- src/glad.c -> ponlo en third_party/glad/src/
+
+
+Significa que la fecha u hora de tu sistema operativo está desincronizada respecto a la fecha en la que se guardaron o descargaron esos archivos (los de GLAD). Como los archivos parecen venir del "futuro" para tu reloj actual, CMake se confunde al calcular qué debe recompilar y qué no.
+
+Para solucionarlo de forma definitiva en Ubuntu, solo sincroniza tu reloj con internet ejecutando este comando en la terminal:
+
+Ejecuta este comando en la raíz de tu proyecto (~/Documentos/learnopengl):
+
+```bash
+touch third_party/glad/src/glad.c third_party/glad/include/glad/glad.h third_party/glad/include/KHR/khrplatform.h
+```
+
+learnopengl/chapter3/hello-window/CMakeLists.txt
+```
+cmake_minimum_required(VERSION 3.14)
+project(HelloWindow)
+
+# Buscar las librerías de OpenGL del sistema operativo
+find_package(OpenGL REQUIRED)
+
+# Tu ejecutable con el código fuente
+add_executable(hello_window main.cpp)
+
+# Enlazar las librerías (aquí ya reconocerá OpenGL::GL)
+target_link_libraries(hello_window PRIVATE glfw OpenGL::GL glad)
+
+```
+
+learnopengl/CMakeLists.txt
+```
+cmake_minimum_required(VERSION 3.14)
+project(LearnOpenGL CXX C)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(glfw3 REQUIRED)
+
+# Compilar GLAD directamente desde nuestros archivos fuente locales
+add_library(glad third_party/glad/src/glad.c)
+target_include_directories(glad PUBLIC third_party/glad/include)
+
+# Incluir el capítulo
+add_subdirectory(chapter3/hello-window)
+```
