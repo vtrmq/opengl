@@ -331,8 +331,6 @@ cd .. && make -C build hello_window
 ./build/chapter3/hello-window/hello_window
 ```
 
-Para silenciar los mensajes:
-
 ```
 vtrmq@vtrkit:~/Documentos/learnopengl$ make -C build hello_window
 make: se entra en el directorio '/home/vtrmq/Documentos/learnopengl/build'
@@ -352,6 +350,60 @@ make[3]: se entra en el directorio '/home/vtrmq/Documentos/learnopengl/build'
 [100%] Linking CXX executable hello_window
 ```
 
+Para silenciar los mensajes:
+
+
 ```bash
 make -s -C build hello_window
 ```
+
+A continuación, debemos crear un objeto de ventana. Este objeto contiene todos los datos de ventana y es necesario para la mayoría de las demás funciones de GLFW.
+
+```cpp
+GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+if (window == NULL) {
+  std::cout << "Failed to create GLFW window" << std::endl;
+  glfwTerminate();
+  return -1;
+}
+glfwMakeContextCurrent(window);
+```
+
+La función glfwCreateWindow requiere el ancho y el alto de la ventana como sus dos primeros argumentos, respectivamente. El tercer argumento nos permite crear un nombre para la ventana; por ahora la llamamos "LearnOpenGL", pero puedes nombrarla como quieras. Podemos ignorar los dos últimos parámetros. La función devuelve un objeto GLFWwindow que necesitaremos más adelante para otras operaciones de GLFW. Después, le indicamos a GLFW que establezca el contexto de nuestra ventana como el contexto principal en el hilo actual.
+
+## GLAD
+Anteriormente se mencionó que GLAD gestiona los punteros a funciones de OpenGL, por lo que debemos inicializar GLAD antes de llamar a cualquier función de OpenGL:
+
+```cpp
+if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+  std::cout << "Failed to initialize GLAD" << std::endl;
+  return -1;
+}
+```
+Le pasamos a GLAD la función para cargar la dirección de los punteros de función de OpenGL, que es específica del sistema operativo. GLFW nos proporciona glfwGetProcAddress, que define la función correcta según el sistema operativo para el que estemos compilando.
+
+Al principio es muy fácil confundirse porque ambas librerías se encargan de cosas de bajo nivel relacionadas con la ventana y los gráficos, pero tienen roles totalmente separados.
+
+Aquí tienes la regla de oro para diferenciarlas de un vistazo:
+
+## 1. GLFW: El administrador del Sistema (Ventanas, Teclado y Contexto)
+GLFW no sabe nada de OpenGL en sí mismo. Su único trabajo es lidiar con tu sistema operativo (Linux, Windows, etc.) para:
+
+- Abrir, cerrar y redimensionar la ventana.
+- Detectar eventos del teclado, mouse y joystick.
+- Crear el contexto de OpenGL y manejar los buffers de la pantalla (como el intercambio de fotogramas con glfwSwapBuffers).
+- ¿Cómo reconocer sus funciones?
+  - Todas empiezan obligatoriamente con el prefijo glfw (en minúsculas).
+  - Ejemplos: glfwInit(), glfwCreateWindow(), glfwWindowShouldClose(), glfwPollEvents().
+
+## 2. GLAD: El traductor de OpenGL (Funciones de la Tarjeta Gráfica)
+OpenGL no es una librería estática, es una especificación (un estándar). Los drivers de tu tarjeta gráfica (NVIDIA, AMD, Intel) implementan ese estándar, pero las direcciones de memoria de esas funciones cambian en cada computadora y sistema operativo. GLAD se encarga de buscar esos punteros en tiempo de ejecución.
+
+- ¿Cómo reconocer sus funciones?
+  - Tienen el prefijo gl (en minúsculas).
+  - Ejemplos: glClearColor(), glClear(), glDrawArrays(), glGenBuffers(), glUseProgram().
+  - (También incluye su propia función de inicialización: gladLoadGLLoader()).
+
+## En resumen:
+- Si la función abre una ventana, lee teclas o maneja el ciclo de la aplicación: es GLFW (glfw...).
+- Si la función dibuja triángulos, pinta la pantalla, configura vértices, shaders o texturas: es OpenGL, gestionado por GLAD (gl...).
