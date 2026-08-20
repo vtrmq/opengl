@@ -31,3 +31,29 @@ Estas líneas de código se utilizan al inicio de un programa en C o C++ para co
   - **Por qué es importante:** OpenGL tiene dos perfiles principales: el Compatibility Profile (que incluye funciones antiguas y obsoletas del pipeline fijo) y el Core Profile (que elimina todo lo antiguo y se enfoca exclusivamente en el desarrollo moderno basado en shaders, VBOs y VAOs). Usar el Core Profile es el estándar actual para aprender y desarrollar gráficos modernos.
 
 > Nota: Estas funciones de glfwWindowHint deben colocarse siempre antes de crear la ventana real con glfwCreateWindow, ya que actúan como una configuración previa que GLFW lee al momento de generar el contexto gráfico.
+
+Para manejar un fallo en la inicialización, debes evaluar el valor que devuelve la función glfwInit(). Esta función retorna GLFW_TRUE (o un valor distinto de cero) si tiene éxito, y GLFW_FALSE (0) si ocurre un error.
+
+Aquí tienes el código típico en C++ para comprobarlo:
+
+```cpp
+#include <iostream>
+#include <GLFW/glfw3.h>
+
+int main() {
+    // Intentamos inicializar GLFW y verificamos si falla
+    if (!glfwInit()) {
+        std::cerr << "Fallo al inicializar GLFW" << std::endl;
+        return -1; // Salimos del programa indicando un error
+    }
+
+    // El resto de tu código de configuración y bucle principal...
+
+    glfwTerminate(); // No olvides limpiar recursos al terminar
+    return 0;
+}
+```
+
+## Detalles útiles:
+- glfwTerminate(): Aunque el programa esté fallando y salgas con return -1, es una buena práctica asegurarte de liberar cualquier recurso residual si ya se había inicializado parcialmente algo complejo (aunque si glfwInit falla por completo, por lo general no es estrictamente necesario, pero sí lo es al cerrar el programa con éxito).
+- glfwGetError(const char** description): Si necesitas saber exactamente por qué falló glfwInit(), puedes usar esta función antes de que el programa termine para capturar el mensaje de error de GLFW.
