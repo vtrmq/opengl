@@ -16,3 +16,18 @@ int main() {
   return 0;
 }
 ```
+
+Estas líneas de código se utilizan al inicio de un programa en C o C++ para configurar y preparar el entorno gráfico utilizando la librería GLFW junto con OpenGL.
+
+## Desglose línea por línea
+- glfwInit();
+  - **Qué hace:** Inicializa la librería GLFW.
+  - **Por qué es importante:** Es el paso obligatorio antes de llamar a casi cualquier otra función de GLFW. Se encarga de configurar los sistemas internos de la librería (como el manejo de hilos, entradas del teclado/ratón, etc.). Si falla, devolverá un error.
+- glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); y glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  - **Qué hacen:** Indican a GLFW qué versión de OpenGL queremos usar. En este caso, la versión 3.3.
+  - **Por qué son importantes:** Por defecto, las computadoras pueden abrir contextos de OpenGL muy antiguos (como la versión 1.1). Estas líneas le avisan al sistema operativo y a la tarjeta gráfica que requerimos específicamente las características de OpenGL 3.3.
+- glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  - **Qué hace:** Selecciona el perfil de OpenGL que deseamos, en este caso, el Core Profile (Perfil Principal).
+  - **Por qué es importante:** OpenGL tiene dos perfiles principales: el Compatibility Profile (que incluye funciones antiguas y obsoletas del pipeline fijo) y el Core Profile (que elimina todo lo antiguo y se enfoca exclusivamente en el desarrollo moderno basado en shaders, VBOs y VAOs). Usar el Core Profile es el estándar actual para aprender y desarrollar gráficos modernos.
+
+> Nota: Estas funciones de glfwWindowHint deben colocarse siempre antes de crear la ventana real con glfwCreateWindow, ya que actúan como una configuración previa que GLFW lee al momento de generar el contexto gráfico.
