@@ -165,10 +165,47 @@ Ejecuta este comando en tu terminal para comprobarlo:
 dpkg -l | grep libglfw3-dev
 ```
 
-**Si te aparece con ii al inicio:** ¡Ya la tienes instalada!
-**Si no sale nada o está vacío:** Instálala rápidamente ejecutando:
+- **Si te aparece con ii al inicio:** ¡Ya la tienes instalada!
+- **Si no sale nada o está vacío:** Instálala rápidamente ejecutando:
 
 ```bash
 sudo apt install libglfw3-dev
 ```
 
+## GLAD
+Como habrás visto en el libro, OpenGL necesita una librería llamada GLAD para cargar las funciones de la tarjeta gráfica.
+
+## ¿Qué es GLAD y por qué se necesita?
+OpenGL no es una biblioteca de código que descargas y vinculas (.lib o .so), sino una especificación creada por el Khronos Group. Los fabricantes de tarjetas gráficas (NVIDIA, AMD, Intel) implementan esa especificación en los drivers de tu sistema operativo.
+
+Dado que cada sistema operativo maneja las funciones gráficas de forma distinta (especialmente en Windows o Linux), las funciones de OpenGL de la versión 3.3 en adelante no se pueden invocar directamente. Tienes que buscar dinámicamente en memoria la dirección de cada función de la GPU en tiempo de ejecución.
+
+GLAD es un cargador (loader) que hace ese trabajo sucio por ti: inicializa los punteros de todas las funciones de OpenGL para que puedas llamarlas con normalidad.
+
+## ¿Cuáles son las alternativas de uso de GLAD?
+Existen tres formas principales de integrar un cargador de OpenGL en un proyecto:
+
+Alternativa A: Usar GLEW (El competidor antiguo de GLAD)
+Qué es: Otra librería de carga similar a GLAD, pero más antigua.
+
+Por qué se usaba antes: Era el estándar de la industria hace 10 años.
+
+Por qué ya no se recomienda tanto: Es más pesada, a veces genera conflictos con extensiones modernas de OpenGL y su arquitectura interna es más compleja de mantener.
+
+```
+learnopengl/
+│
+├── CMakeLists.txt              <-- (El archivo maestro que gobierna todo)
+├── third_party/
+│   └── glad/
+│       ├── include/
+│       │   ├── glad/glad.h
+│       │   └── KHR/khrplatform.h
+│       └── src/
+│           └── glad.c          <-- (GLAD vive AQUÍ una sola vez y para siempre)
+│
+└── chapter3/
+    └── hello-window/
+        ├── CMakeLists.txt      <-- (Un archivo chiquito que solo compila tu main.cpp)
+        └── main.cpp            <-- (Tu código del capítulo)
+```
