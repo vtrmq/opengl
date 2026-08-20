@@ -301,3 +301,57 @@ target_include_directories(glad PUBLIC third_party/glad/include)
 # Incluir el capítulo
 add_subdirectory(chapter3/hello-window)
 ```
+
+
+```
+vtrmq@vtrkit:~/Documentos/learnopengl$ tree
+.
+├── chapter3
+│   └── hello-window
+│       ├── CMakeLists.txt
+│       └── main.cpp
+├── CMakeLists.txt
+└── third_party
+    └── glad
+        ├── include
+        │   ├── glad
+        │   │   └── glad.h
+        │   └── KHR
+        │       └── khrplatform.h
+        └── src
+            └── glad.c
+
+8 directories, 6 files
+```
+
+```bash
+mkdir build && cd build
+cmake ..
+cd .. && make -C build hello_window
+./build/chapter3/hello-window/hello_window
+```
+
+Para silenciar los mensajes:
+
+```
+vtrmq@vtrkit:~/Documentos/learnopengl$ make -C build hello_window
+make: se entra en el directorio '/home/vtrmq/Documentos/learnopengl/build'
+make[1]: se entra en el directorio '/home/vtrmq/Documentos/learnopengl/build'
+make[2]: se entra en el directorio '/home/vtrmq/Documentos/learnopengl/build'
+make[3]: se entra en el directorio '/home/vtrmq/Documentos/learnopengl/build'
+make[3]: se sale del directorio '/home/vtrmq/Documentos/learnopengl/build'
+make[3]: se entra en el directorio '/home/vtrmq/Documentos/learnopengl/build'
+[ 25%] Building C object CMakeFiles/glad.dir/third_party/glad/src/glad.c.o
+[ 50%] Linking C static library libglad.a
+make[3]: se sale del directorio '/home/vtrmq/Documentos/learnopengl/build'
+[ 50%] Built target glad
+make[3]: se entra en el directorio '/home/vtrmq/Documentos/learnopengl/build'
+make[3]: se sale del directorio '/home/vtrmq/Documentos/learnopengl/build'
+make[3]: se entra en el directorio '/home/vtrmq/Documentos/learnopengl/build'
+[ 75%] Building CXX object chapter3/hello-window/CMakeFiles/hello_window.dir/main.cpp.o
+[100%] Linking CXX executable hello_window
+```
+
+```bash
+make -s -C build hello_window
+```
